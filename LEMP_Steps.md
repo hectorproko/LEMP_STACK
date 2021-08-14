@@ -295,3 +295,113 @@ After logging in to the MySQL console, confirm that you have access to the exam
 mysql> SHOW DATABASES;
 ```
 ![Markdown Logo](https://raw.githubusercontent.com/hectorproko/LEMP_STACK/main/images/showdatabase.png)
+
+* Next, we’ll create a test table named **todo_list** by running the following from the MySQL console
+
+```sql
+CREATE TABLE example_database.todo_list (
+mysql>     item_id INT AUTO_INCREMENT,
+mysql>     content VARCHAR(255),
+mysql>     PRIMARY KEY(item_id)
+mysql> );
+```
+Keep in mind you are typing one line a time and pressing **ENTER**
+
+```bash
+#my output
+mysql> CREATE TABLE example_database.todo_list (
+    -> item_id INT AUTO_INCREMENT,
+    -> content VARCHAR(255),
+    -> PRIMARY KEY(item_id)
+    -> );
+
+Query OK, 0 rows affected (0.04 sec)
+```
+
+* To insert content into our table
+```sql
+mysql> INSERT INTO example_database.todo_list (content) VALUES ("My first important item");
+```
+```bash
+#my output
+mysql> INSERT INTO example_database.todo_list(content) VALUES ("Finishes Project 1");
+Query OK, 1 row affected (0.00 sec)
+
+mysql> INSERT INTO example_database.todo_list(content) VALUES ("Finishes Project 2");
+Query OK, 1 row affected (0.01 sec)
+
+mysql> INSERT INTO example_database.todo_list(content) VALUES ("Finishes Project 3");
+
+Query OK, 1 row affected (0.01 sec)
+```
+
+* To confirm that the data was successfully saved to your table, run:
+```sql
+mysql>  SELECT * FROM example_database.todo_list;
+```
+```bash
+#my output
+mysql> SELECT * FROM example_database.todo_list;
++---------+--------------------+
+| item_id | content            |
++---------+--------------------+
+|       1 | Finishes Project 1 |
+|       2 | Finishes Project 2 |
+|       3 | Finishes Project 3 |
++---------+--------------------+
+3 rows in set (0.00 sec)
+
+```
+* After confirming your table has data, you can exit MySQL console:
+```bash
+mysql> exit
+```
+* Now we will create a PHP script that will connect to MySQL and query your content. First we create a file **todo_list.php** using nano
+```bash
+nano /var/www/projectLEMP/todo_list.php
+```
+When nano opens paste this code
+```php
+<?php
+$user = "example_user";
+$password = "Passw0rd";
+$database = "example_database";
+$table = "todo_list";
+try {
+  $db = new PDO("mysql:host=localhost;dbname=$database", $user, $password);
+  echo "<h2>TODO</h2><ol>";
+  foreach($db->query("SELECT content FROM $table") as $row) {
+    echo "<li>" . $row['content'] . "</li>";
+  }
+  echo "</ol>";
+} catch (PDOException $e) {
+    print "Error!: " . $e->getMessage() . "<br/>";
+    die();
+}
+```
+Save and close file
+
+```bash
+#Here I use cat to confirm code inside todo_list.php
+ubuntu@ip-172-31-59-190:~$ nano /var/www/projectLEMP/todo_list.php
+ubuntu@ip-172-31-59-190:~$ cat /var/www/projectLEMP/todo_list.php
+<?php
+$user = "example_user";
+$password = "Passw0rd!";
+$database = "example_database";
+$table = "todo_list";
+
+try {
+  $db = new PDO("mysql:host=localhost;dbname=$database", $user, $password);
+  echo "<h2>TODO</h2><ol>";
+  foreach($db->query("SELECT content FROM $table") as $row) {
+    echo "<li>" . $row['content'] . "</li>";
+  }
+  echo "</ol>";
+} catch (PDOException $e) {
+    print "Error!: " . $e->getMessage() . "<br/>";
+    die();
+}
+ubuntu@ip-172-31-59-190:~$
+```
+* Now to confirm everything works access this page in your browser by visiting domain name or public IP address configured for your website, followed by **/todo_list.php**:
