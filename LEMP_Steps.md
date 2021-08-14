@@ -246,7 +246,7 @@ sudo rm /var/www/your_domain/info.php
 * We try to access the script one more time to confirm
 ![Markdown Logo](https://raw.githubusercontent.com/hectorproko/LEMP_STACK/main/images/notfound.png)
 
-## ~~Retrieving data from~~ MySQL database with PHP
+## Retrieving data from MySQL database with PHP
 ---
 
 * We will create a database named **example_database** and a user named **example_user**
