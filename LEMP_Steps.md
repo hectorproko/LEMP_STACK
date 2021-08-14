@@ -90,4 +90,56 @@ You can find your Public IP Address running this cmd on the terminal
 curl -s http://169.254.169.254/latest/meta-data/public-ipv4
 ```
 * If your page is up and running you will see nginx sample page
-![Markdown Logo](https://raw.githubusercontent.com/hectorproko/LEMP_STACK/main/images/ubunutuLogIn.png)
+![Markdown Logo](https://raw.githubusercontent.com/hectorproko/LEMP_STACK/main/images/welcomenginx.png) <br/>
+The URL in browser shall also work if you do not specify port number since all web browsers use port 80 by default.
+
+## Installing Mysql
+---
+
+* We will again use **apt** to install this software
+```bash
+sudo apt install mysql-server
+```
+* When prompted, confirm installation by typing **Y**, and then **ENTER**.
+* Once installation is done we will run a script that removes some insecure default settings and lock down access to your database system. To start the interactive script run:
+```bash
+sudo mysql_secure_installation
+```
+And follow the wizard like questions
+* Will ask if you want to configure the VALIDATE PASSWORD PLUGIN. I'll put yes for an additioanl layer of security <br />
+![Markdown Logo](https://raw.githubusercontent.com/hectorproko/LAMP_SATCK/main/images/validate.png) <br />
+Keep answering the questions till the end
+
+* When you’re finished, test if you’re able to log in to the MySQL console by typing:
+```bash
+sudo mysql
+```
+You should see
+```bash
+mysql> 
+```
+* To exit type **exit**
+```bash
+mysql> exit
+Bye
+```
+
+## Installing PHP
+---
+* Now you can install PHP to process code and generate dynamic content for the web server. Nginx requires an external program to handle PHP processing and act as a bridge between the PHP interpreter itself and the web server. You’ll need to install:
+    *  **php-fpm** which stands for “PHP fastCGI process manager 
+        * Need to configure Nginx to pass PHP requests to this software for processing.
+    * **php-mysql** a PHP module that allows PHP to communicate with MySQL-based databases. Core PHP packages will automatically be installed as dependencies.
+
+* To install these 2 packages at once, run:
+```bash
+sudo apt install php-fpm php-mysql -y
+```
+## Configuring Nginx to Use PHP Processor
+---
+
+*  To encapsulate configuration details and host more than one domain on a single server Nginx web server uses server block (the equivalent of virtual hosts in Apache)
+
+* On Ubuntu 20.04, Nginx has one server block enabled by default and is configured to serve documents out of a directory at /var/www/html. While this works well for a single site, it can become difficult to manage if you are hosting multiple sites. Instead of modifying /var/www/html, we’ll create a directory structure within /var/www for the your_domain website, leaving /var/www/html in place as the default directory to be served if a client request does not match any other sites.
+Create the root web directory for your_domain as follows:
+sudo mkdir /var/www/projectLEMP
