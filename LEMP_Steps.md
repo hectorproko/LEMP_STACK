@@ -107,7 +107,7 @@ sudo mysql_secure_installation
 ```
 And follow the wizard like questions
 * Will ask if you want to configure the VALIDATE PASSWORD PLUGIN. I'll put yes for an additioanl layer of security <br />
-![Markdown Logo](https://raw.githubusercontent.com/hectorproko/LAMP_SATCK/main/images/validate.png) <br />
+![Markdown Logo](https://raw.githubusercontent.com/hectorproko/LAMP_STACK/main/images/validate.png) <br />
 Keep answering the questions till the end
 
 * When you’re finished, test if you’re able to log in to the MySQL console by typing:
@@ -140,6 +140,158 @@ sudo apt install php-fpm php-mysql -y
 
 *  To encapsulate configuration details and host more than one domain on a single server Nginx web server uses server block (the equivalent of virtual hosts in Apache)
 
-* On Ubuntu 20.04, Nginx has one server block enabled by default and is configured to serve documents out of a directory at /var/www/html. While this works well for a single site, it can become difficult to manage if you are hosting multiple sites. Instead of modifying /var/www/html, we’ll create a directory structure within /var/www for the your_domain website, leaving /var/www/html in place as the default directory to be served if a client request does not match any other sites.
-Create the root web directory for your_domain as follows:
+* On Ubuntu 20.04, Nginx has one server block enabled by default and is configured to serve documents out of a directory at **/var/www/html**. We’ll create a directory structure within **/var/www** for the your_domain website, leaving **/var/www/html** in place as the default directory to be served if a client request does not match any other sites.
+
+* Create the root web directory for your_domain as follows:
+```bash
 sudo mkdir /var/www/projectLEMP
+```
+![Markdown Logo](https://raw.githubusercontent.com/hectorproko/LEMP_STACK/main/images/projectlemp.png)
+
+* Next, assign ownership of the directory with the $USER environment variable, which will reference your current system user:
+```bash
+sudo chown -R $USER:$USER /var/www/projectLEMP
+```
+My current user is ubuntu <br/>
+![Markdown Logo](https://raw.githubusercontent.com/hectorproko/LEMP_STACK/main/images/chown.png)
+
+* We'll create a new configuration file in Nginx's **sites-available** directory using **nano** command-line editor.
+```bash
+sudo nano /etc/nginx/sites-available/projectLEMP
+```
+Paste in the following bare-bones configuration:
+```bash
+#/etc/nginx/sites-available/projectLEMP
+server {
+    listen 80;
+    server_name projectLEMP www.projectLEMP;
+    root /var/www/projectLEMP;
+    index index.html index.htm index.php;
+    location / {
+        try_files $uri $uri/ =404;
+    }
+    location ~ \.php$ {
+        include snippets/fastcgi-php.conf;
+        fastcgi_pass unix:/var/run/php/php7.4-fpm.sock;
+     }
+     location ~ /\.ht {
+        deny all;
+    }
+}
+```
+When done I'll save and close the file by typing **CTRL+X** and then **y** and **ENTER** to confirm.
+
+* Here’s what each of these directives and location blocks do:
+	* **listen** — Defines what port Nginx will listen on.
+	* **root** — Defines the document root where the files served by this website are stored.
+	* **index** — Defines in which order Nginx will prioritize index files for this website.
+	* **server_name** — Defines which domain names and/or IP addresses this server block should respond for. Point this directive to your server’s domain name or public IP address.
+	* **location /** — The first location block includes a try_files directive, which checks for the existence of files or directories matching a URI request. If Nginx cannot find the appropriate resource, it will return a 404 error.
+	* **location ~ \.php$** — This location block handles the actual PHP processing by pointing Nginx to the fastcgi-php.conf configuration file and the **php7.4-fpm.sock** file, which declares what socket is associated with php-fpm.
+	* **location ~ /\.ht** — The last location block deals with .htaccess files, which Nginx does not process. By adding the deny all directive, if any .htaccess files happen to find their way into the document root ,they will not be served to visitors.
+
+* I'll activate the configuration by linking to the config file from Nginx’s **sites-enabled** directory to tell Nginx to use it next it it is reloaded
+```bash
+sudo ln -s /etc/nginx/sites-available/projectLEMP /etc/nginx/sites-enabled/
+```
+* To test configuration for syntax errors I run
+```bash
+sudo nginx -t
+```
+    nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
+    nginx: configuration file /etc/nginx/nginx.conf test is successful
+
+* I'll also disable Nginx's default host
+```bash
+sudo unlink /etc/nginx/sites-enabled/default
+```
+* To apply the changes need to reload nginx
+```bash
+sudo systemctl reload nginx
+```
+* Now all we need is a page to host. We will create one in **web root /var/www/projectLEMP**
+```bash
+sudo echo 'Hello LEMP from hostname' $(curl -s http://169.254.169.254/latest/meta-data/public-hostname) 'with public IP' $(curl -s http://169.254.169.254/latest/meta-data/public-ipv4) > /var/www/projectLEMP/index.html
+```
+![Markdown Logo](https://raw.githubusercontent.com/hectorproko/LEMP_STACK/main/images/index.png)
+
+* Now we'll try to open the website using a browser with the server's IP address
+![Markdown Logo](https://raw.githubusercontent.com/hectorproko/LEMP_STACK/main/images/browserIP.png)
+
+## Testing PHP with Nginx
+---
+
+* Now that **LEMP** stack is fully configured. We’ll create a PHP script to test that Nginx is in fact able to handle .php files within our newly configured website.
+
+* We'll do this using **nano**
+```bash
+sudo nano /var/www/projectLEMP/info.php
+```
+Paste this code code inside
+```php
+<?php
+phpinfo();
+```
+![Markdown Logo](https://raw.githubusercontent.com/hectorproko/LEMP_STACK/main/images/phpcode.png)
+
+* I'll now access this page in my web browser using DNS address given by aws, followed by /info.php: <br />
+![Markdown Logo](https://raw.githubusercontent.com/hectorproko/LEMP_STACK/main/images/phppage.png)
+
+
+* After testing and getting the information we need it is best practice to remove the script as it displays sentivie information about your system
+```bash
+sudo rm /var/www/your_domain/info.php
+```
+
+* We try to access the script one more time to confirm
+![Markdown Logo](https://raw.githubusercontent.com/hectorproko/LEMP_STACK/main/images/notfound.png)
+
+## ~~Retrieving data from~~ MySQL database with PHP
+---
+
+* We will create a database named **example_database** and a user named **example_user**
+
+* First, connect to the MySQL console using the **root** account:
+```bash
+sudo mysql
+```
+* From your MySQL console run the following command to create the database
+```bash
+mysql> CREATE DATABASE `example_database`;
+```
+![Markdown Logo](https://raw.githubusercontent.com/hectorproko/LEMP_STACK/main/images/createdatabase.png)
+
+* Now lets create a user with **mysql_native_password** as default authentication method. Here I'm setting the password to **Passw0rd!**
+```sql
+mysql>  CREATE USER 'example_user'@'%' IDENTIFIED WITH mysql_native_password BY 'password';
+```
+![Markdown Logo](https://raw.githubusercontent.com/hectorproko/LEMP_STACK/main/images/createuser.png)
+
+* To give the newly created user **full privileges** over the database run
+```sql
+mysql> GRANT ALL ON example_database.* TO 'example_user'@'%';
+```
+![Markdown Logo](https://raw.githubusercontent.com/hectorproko/LEMP_STACK/main/images/grantall.png)
+
+* Now exit the MySQL shell with:
+```sql
+mysql> exit
+```
+    mysql> exit
+    Bye
+
+
+* We will logging in to the MySQl console using the custom user credentials to test the permissions
+```bash
+mysql -u example_user -p
+```
+**-p** flag in this command, which will prompt you for the password
+
+![Markdown Logo](https://raw.githubusercontent.com/hectorproko/LEMP_STACK/main/images/usertest.png)
+`
+
+After logging in to the MySQL console, confirm that you have access to the example_database database:
+```bash
+mysql> SHOW DATABASES;
+```
+![Markdown Logo](https://raw.githubusercontent.com/hectorproko/LEMP_STACK/main/images/showdatabase.png)
